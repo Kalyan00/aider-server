@@ -95,7 +95,12 @@ async def fetch_models(provider: str, api_key: str | None, api_base: str | None,
         raise HTTPException(status_code=400, detail=f"unknown provider: {provider}")
 
     async with httpx.AsyncClient(timeout=10, verify=verify_ssl) as client:
-        response = await client.get(url, headers=headers, params=params)
+        try:
+            response = await client.get(url, headers=headers, params=params)
+        except httpx.ConnectError as e:
+            raise HTTPException(status_code=502, detail=f"Cannot connect to {provider} API: {e}")
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail=f"Timeout connecting to {provider} API")
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
