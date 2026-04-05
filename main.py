@@ -22,12 +22,14 @@ class AiderConfig(BaseModel):
     provider: str                    # "openai" | "anthropic" | "deepseek" | "gemini" | "openai-compatible"
     api_key: str | None = None
     api_base: str | None = None
+    verify_ssl: bool = True          # добавлено
 
 
 class ModelsRequest(BaseModel):
     provider: str
     api_key: str | None = None
     api_base: str | None = None
+    verify_ssl: bool = True          # добавлено
 
 
 class RepoRequest(BaseModel):
@@ -59,7 +61,7 @@ PROVIDER_ENDPOINTS = {
 }
 
 
-async def fetch_models(provider: str, api_key: str | None, api_base: str | None) -> list[str]:
+async def fetch_models(provider: str, api_key: str | None, api_base: str | None, verify_ssl: bool = True) -> list[str]:
     headers = {}
     params = {}
 
@@ -92,7 +94,7 @@ async def fetch_models(provider: str, api_key: str | None, api_base: str | None)
     else:
         raise HTTPException(status_code=400, detail=f"unknown provider: {provider}")
 
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(timeout=10, verify=verify_ssl) as client:
         response = await client.get(url, headers=headers, params=params)
 
     if response.status_code != 200:
@@ -146,7 +148,7 @@ def get_providers():
 
 @app.post("/models")
 async def get_models(request: ModelsRequest):
-    models = await fetch_models(request.provider, request.api_key, request.api_base)
+    models = await fetch_models(request.provider, request.api_key, request.api_base, request.verify_ssl)
     return {"models": models}
 
 
