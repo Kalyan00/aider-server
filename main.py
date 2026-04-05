@@ -228,8 +228,12 @@ def edit(request: EditRequest):
     return {"output": result.stdout}
 
 
+def start():
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8337)
+
+
 # --- Entry point ---
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8337)
+    start()
